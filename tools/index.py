@@ -120,7 +120,8 @@ def read_page(path):
     front, body = split_front_matter(path.read_text(encoding="utf-8"))
     meta = parse_meta(front)
     text = plain(body)
-    tags = meta.get("tags", [])
+    tags = meta.get("tags",[])
+    is_draft = meta.get("draft", False)
     return {
         "url": url_of(path),
         "title": meta.get("title", path.stem),
@@ -129,13 +130,19 @@ def read_page(path):
         "tags": tags if isinstance(tags, list) else [tags],
         "draft": meta.get("draft", False) is True,
         "text": text,
+        "draft": is_draft,
     }
 
 
 def read_all():
     files = (p for p in sorted(CONTENT.rglob("*.md")) if p.name != "_index.md")
     return [page for page in map(read_page, files) if not page["draft"]]
+    include_drafts = "--drafts" in sys.argv
 
+    if include_drafts:
+        return list(map(read_page, files))
+    else:
+        return [page for page in map(read_page, files) if not page ["draft"]]
 
 # --- efectos: disco y SQL ----------------------------------------------------
 
