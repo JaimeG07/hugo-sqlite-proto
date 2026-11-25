@@ -5,7 +5,7 @@ Ejecuta:  make test   (o: python3 -m unittest discover -s tools -v)
 """
 import unittest
 
-from migrar import SQL_DATETIME_ZERO, etiquetas_json, fecha_chyrp, slugify, transformar
+from migrar import SQL_DATETIME_ZERO, etiquetas_json, fecha_chyrp, slugify, transformar, transformar_pagina
 
 ENTRADA = {
     "slug": "hola-hugo",
@@ -67,6 +67,34 @@ class TestTransformar(unittest.TestCase):
         # Misma entrada, mismo resultado, y la entrada original no cambia.
         self.assertEqual(self.fila, transformar(ENTRADA, 1, "2026-11-16 12:00:00"))
         self.assertEqual(ENTRADA["tags"], ["hugo", "Árbol B"])
+
+
+
+class TestTransformarPagina(unittest.TestCase):
+    def test_pagina_publica(self):
+        pagina = {
+            "slug": "about",
+            "titulo": "Acerca de",
+            "fecha": "2026-10-27",
+            "cuerpo": "Texto con **Markdown**.",
+            "tags": [],
+            "draft": False,
+        }
+        fila = transformar_pagina(pagina, user_id=1, ahora="2026-11-16 12:00:00")
+        self.assertEqual(fila["title"], "Acerca de")
+        self.assertEqual(fila["clean"], "about")
+        self.assertEqual(fila["url"], "about")
+        self.assertEqual(fila["public"], 1)
+        self.assertEqual(fila["show_in_list"], 1)
+        self.assertEqual(fila["parent_id"], 0)
+        self.assertEqual(fila["created_at"], "2026-10-27 00:00:00")
+        self.assertEqual(fila["updated_at"], SQL_DATETIME_ZERO)
+
+    def test_pagina_borrador(self):
+        pagina = {**ENTRADA, "slug": "borrador-pag", "draft": True}
+        fila = transformar_pagina(pagina, user_id=2, ahora="2026-11-16 12:00:00")
+        self.assertEqual(fila["public"], 0)
+        self.assertEqual(fila["user_id"], 2)
 
 
 if __name__ == "__main__":

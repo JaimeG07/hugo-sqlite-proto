@@ -25,7 +25,7 @@ test:   ## Prueba las funciones puras de tools/migrar.py
 
 migrar:   ## Markdown → SQLite de Chyrp Lite: make migrar DESTINO=/ruta/copia.sqlite [SIMULACRO=1]
 	@test -n "$(DESTINO)" || { echo "Uso: make migrar DESTINO=/ruta/copia.sqlite [SIMULACRO=1]"; exit 1; }
-	python3 tools/migrar.py --destino "$(DESTINO)" $(if $(SIMULACRO),--simulacro,)
+	python3 tools/migrar.py --destino "$(DESTINO)" $(if $(SIMULACRO),--simulacro,) $(if $(PAGINAS),--paginas "$(PAGINAS)",)
 
 check-invites:   ## [profesor] Lista invitaciones de colaborador pendientes (gh auth login)
 	@gh api user/repository_invitations --jq '.[] | "\(.id)\t\(.repository.full_name)\tinvited_by=\(.invited_by.login)\t\(.created_at)"' \
