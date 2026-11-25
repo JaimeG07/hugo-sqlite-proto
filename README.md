@@ -145,3 +145,19 @@ git log --format='%h %ad %s' --date=iso | head -20
 ```
 
 "Recuerda ... KISS!" :-)
+
+---
+
+## P1.2 — Migración a Chyrp Lite + SQLite (rama `chyrp-lite`)
+
+En esta rama se ha implementado la migración ETL del blog estático (Hugo + SQLite) a **Chyrp Lite 2026.03.01** con SQLite:
+
+- **`tools/migrar.py`**: script ETL (extraer, transformar, cargar) transaccional e idempotente que migra entradas Markdown (`content/posts/*.md`) a las tablas `posts` y `post_attributes` de Chyrp Lite.
+- **`tools/test_migrar.py`**: batería de 16 pruebas unitarias (`make test`) sobre las funciones puras.
+- **`Makefile`**: nuevos objetivos `make test` y `make migrar DESTINO=/ruta/copia.sqlite [SIMULACRO=1] [PAGINAS=content]`.
+- **Ampliaciones realizadas (ejercicios):**
+  1. **Ejercicio 1**: verificación experimental de atomicidad con y sin `with con:`.
+  2. **Ejercicio 2**: migración de páginas estáticas (`content/*.md`) a la tabla `pages` mediante `transformar_pagina`, `extraer_paginas`, `cargar_paginas` y `--paginas`.
+  3. **Ejercicio 4**: soporte para el campo `author` en el front matter con respaldo en `--autor`.
+  4. **Ejercicio 5**: compatibilidad exacta con etiquetas numéricas (como `2026`) replicando el prefijo `U+FE0E` y slug `md5` de Tagginator.
+- **`P1.2-montes.md` y `capturas/`**: informe completo de la práctica con exploración de esquemas, correspondencia, lectura guiada, evidencias SQL y capturas de verificación.
