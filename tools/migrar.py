@@ -21,6 +21,7 @@ Uso:
   python3 tools/migrar.py --destino ~/chyrp-datos/copia.sqlite
 """
 import argparse
+import hashlib
 import json
 import re
 import sqlite3
@@ -51,15 +52,34 @@ def fecha_chyrp(valor, por_defecto):
     return f"{dia} {hora_min or '00:00'}:{seg or '00'}"
 
 
+def _es_numerica(texto):
+    """Equivalente a is_numeric() de PHP para nombres de etiqueta."""
+    try:
+        float(str(texto).strip())
+        return True
+    except ValueError:
+        return False
+
+
 def etiquetas_json(nombres):
     """['sql', 'Árbol B'] → '{"sql":"sql","\\u00c1rbol B":"arbol-b"}'.
 
-    Es el formato exacto con el que el módulo Tags guarda las etiquetas en
-    post_attributes: un objeto JSON {nombre: slug}. Sin etiquetas guarda '[]'.
+    Es el formato exacto con el que el módulo Tags (Tagginator) guarda las
+    etiquetas en post_attributes: un objeto JSON {nombre: slug}. Sin etiquetas
+    guarda '[]'. Si un nombre es puramente numérico (p. ej. '2026'), Chyrp Lite
+    antepone U+FE0E para evitar type-juggling de claves en PHP y usa md5 como slug.
     """
     if not nombres:
         return "[]"
-    asociacion = {nombre: slugify(nombre) for nombre in nombres}
+    asociacion = {}
+    for raw in nombres:
+        nombre = str(raw)
+        if _es_numerica(nombre):
+            nombre = "\ufe0e" + nombre
+        slug = slugify(nombre)
+        if not re.search(r"[^\-0-9]+", slug):
+            slug = hashlib.md5(nombre.encode("utf-8")).hexdigest()
+        asociacion[nombre] = slug
     # PHP escribe "/" como "\/" y Python no: igualamos los bytes.
     return json.dumps(asociacion, separators=(",", ":")).replace("/", "\\/")
 
