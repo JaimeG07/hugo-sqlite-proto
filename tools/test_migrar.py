@@ -75,6 +75,16 @@ class TestTransformar(unittest.TestCase):
         self.assertEqual(self.fila, transformar(ENTRADA, 1, "2026-11-16 12:00:00"))
         self.assertEqual(ENTRADA["tags"], ["hugo", "Árbol B"])
 
+    def test_autor_en_front_matter(self):
+        con_autor = {**ENTRADA, "autor": "editor"}
+        fila = transformar(con_autor, user_id=1, ahora="ahora", autores={"jaime": 1, "editor": 2})
+        self.assertEqual(fila["post"]["user_id"], 2)
+
+    def test_autor_desconocido_usa_por_defecto(self):
+        con_autor = {**ENTRADA, "autor": "inexistente"}
+        fila = transformar(con_autor, user_id=1, ahora="ahora", autores={"jaime": 1, "editor": 2})
+        self.assertEqual(fila["post"]["user_id"], 1)
+
 
 
 class TestTransformarPagina(unittest.TestCase):

@@ -96,12 +96,14 @@ def leer_entrada(path):
         "cuerpo": cuerpo.strip(),
         "tags": tags if isinstance(tags, list) else [tags],
         "draft": meta.get("draft", False) is True,
+        "autor": str(meta.get("author", "")).strip(),
     }
 
 
-def transformar(entrada, user_id, ahora):
+def transformar(entrada, user_id, ahora, autores=None):
     """Entrada del prototipo → filas para Chyrp Lite. Sin disco ni SQL."""
     slug = slugify(entrada["slug"])
+    autor_id = (autores or {}).get(entrada.get("autor", ""), user_id)
     return {
         "post": {
             "feather": "text",
@@ -109,7 +111,7 @@ def transformar(entrada, user_id, ahora):
             "url": slug,
             "pinned": 0,
             "status": "draft" if entrada["draft"] else "public",
-            "user_id": user_id,
+            "user_id": autor_id,
             "created_at": fecha_chyrp(entrada["fecha"], ahora),
             "updated_at": SQL_DATETIME_ZERO,
         },
@@ -251,9 +253,10 @@ def main():
 
     con = sqlite3.connect(args.destino)
     user_id = buscar_autor(con, args.autor)
+    autores = dict(con.execute("SELECT login, id FROM users").fetchall())
     con.close()
 
-    filas = [transformar(e, user_id, ahora) for e in entradas]
+    filas = [transformar(e, user_id, ahora, autores) for e in entradas]
     resultado = cargar(args.destino, filas, args.simulacro)
 
     for estado, url in resultado:
