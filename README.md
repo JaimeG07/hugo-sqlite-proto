@@ -161,3 +161,14 @@ En esta rama se ha implementado la migración ETL del blog estático (Hugo + SQL
   3. **Ejercicio 4**: soporte para el campo `author` en el front matter con respaldo en `--autor`.
   4. **Ejercicio 5**: compatibilidad exacta con etiquetas numéricas (como `2026`) replicando el prefijo `U+FE0E` y slug `md5` de Tagginator.
 - **`P1.2-montes.md` y `capturas/`**: informe completo de la práctica con exploración de esquemas, correspondencia, lectura guiada, evidencias SQL y capturas de verificación.
+
+---
+
+## P1.3 — Migración de Chyrp Lite + SQLite a MariaDB (rama `mariadb`)
+
+En esta rama se ha migrado la base de datos de Chyrp Lite desde SQLite (`blog.sqlite`, puerto `8080`) a un servidor **MariaDB 11.8.6** (base de datos `chyrp` en `utf8mb4`, usuario `'chyrp'@'localhost'` con privilegios mínimos, puerto `8081`):
+
+- **`tools/sqlite2maria.py`**: filtro Unix en biblioteca estándar que lee el fichero `.sqlite` en modo solo lectura (`mode=ro`) y genera un volcado SQL transaccional (`START TRANSACTION` / `COMMIT`) y repetible (`DELETE` + `INSERT` por lotes) con `SET NAMES utf8mb4` y `SET FOREIGN_KEY_CHECKS=0`, excluyendo `sessions`.
+- **`tools/test_sqlite2maria.py`**: 13 pruebas unitarias nuevas sobre las funciones puras (29 pruebas totales en `make test`, todas en verde).
+- **`Makefile`**: nuevo objetivo `make maria ORIGEN=/ruta/blog.sqlite` que genera `build/chyrp.sql`.
+- **`P1.3-montes.md` y `capturas/03-portada-mariadb.png`**: informe completo con datos de instalación, comparación de esquemas, tabla de correspondencia entre motores, lectura guiada, evidencias de carga/repetibilidad y verificación SQL y en navegador.
